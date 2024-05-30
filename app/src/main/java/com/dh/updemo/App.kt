@@ -24,7 +24,6 @@ class App : Application() {
             manager.createNotificationChannel(channel)
         }
     }
-
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
