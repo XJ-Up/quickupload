@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.multipleSimultaneous).setOnClickListener {
             startActivity(Intent(this, UploadMultipleFilesSimultaneouslyActivity::class.java))
         }
+
     }
 
     private fun checkPostNotificationsPermission() {

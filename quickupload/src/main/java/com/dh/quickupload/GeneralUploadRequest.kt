@@ -18,7 +18,6 @@ abstract class GeneralUploadRequest<B : GeneralUploadRequest<B>>(context: Contex
     UploadRequest<B>(context, serverUrl) {
 
     private val httpParams = HttpUploadTaskParameters()
-
     init {
         require(serverUrl.isValidHttpUrl()) { "Specify either http:// or https:// as protocol" }
     }

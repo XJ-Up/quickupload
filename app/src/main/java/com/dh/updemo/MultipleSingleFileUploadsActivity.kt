@@ -1,7 +1,6 @@
 package com.dh.updemo
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,10 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.dh.quickupload.UploadService
-import com.dh.quickupload.data.UploadInfo
-import com.dh.quickupload.network.ServerResponse
-import com.dh.quickupload.observer.request.RequestLiveData
-import com.dh.quickupload.observer.request.RequestObserverDelegate
+import com.dh.quickupload.data.UploadStatus
 import com.dh.quickupload.quick.QuickUploadRequest
 import java.io.File
 
@@ -37,82 +33,45 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
 
 
         uploadAdapter = UploadAdapter(fileList) {
-            val uploadStatus = fileList[it].uploadStatus
+            val uploadStatus = fileList[it].status
 
-            if (uploadStatus == 2) {
-                UploadService.stopUpload(it.toString())
-            } else if (uploadStatus == 0 || uploadStatus == 3) {
+            if (uploadStatus == UploadStatus.InProgress) {
+                fileList[it].stopUpload()
+            } else if (uploadStatus == UploadStatus.DEFAULT || uploadStatus == UploadStatus.Error) {
                 val filePath = fileList[it].filePath
-                QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
-                    .setMethod("POST")
-                    .addFileToUpload(
-                        filePath = filePath,
-                        parameterName = "files"
-                    )
-                    .setUploadID(it.toString())
-                    .startUpload()
+                val uploadRequest =
+                    QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
+                        .setMethod("POST")
+                        .addFileToUpload(
+                            filePath = filePath,
+                            parameterName = "files"
+                        )
+                fileList[it].quickUploadRequest = uploadRequest
+                fileList[it].startUpload()
             }
         }
         recyclerView.adapter = uploadAdapter
         findViewById<Button>(R.id.uploadStart).setOnClickListener {
             fileList.forEachIndexed { index, s ->
-                QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
-                    .setMethod("POST")
-                    .addFileToUpload(
-                        filePath = s.filePath,
-                        parameterName = "files"
-                    )
-                    .setUploadID(index.toString())
-                    .startUpload()
+                val uploadRequest =
+                    QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
+                        .setMethod("POST")
+                        .addFileToUpload(
+                            filePath = s.filePath,
+                            parameterName = "files"
+                        )
+                s.quickUploadRequest = uploadRequest
+                s.startUpload()
             }
 
         }
         findViewById<Button>(R.id.endOfUpload).setOnClickListener {
-
             UploadService.stopAllUploads()
         }
         findViewById<Button>(R.id.selectFile).setOnClickListener {
             openFilePicker()
 
         }
-        RequestLiveData(this, object : RequestObserverDelegate {
-            override fun onWait(context: Context, uploadInfo: UploadInfo) {
-                fileList[uploadInfo.uploadId.toInt()].uploadStatus = 1
-                uploadAdapter.notifyDataSetChanged()
-            }
-
-            override fun onProgress(context: Context, uploadInfo: UploadInfo) {
-                fileList[uploadInfo.uploadId.toInt()].uploadProgress = uploadInfo.progressPercent
-                fileList[uploadInfo.uploadId.toInt()].uploadStatus = 2
-                uploadAdapter.notifyDataSetChanged()
-            }
-
-            override fun onSuccess(
-                context: Context,
-                uploadInfo: UploadInfo,
-                serverResponse: ServerResponse
-            ) {
-            }
-
-            override fun onError(context: Context, uploadInfo: UploadInfo, exception: Throwable) {
-
-            }
-
-            override fun onCompleted(context: Context, uploadInfo: UploadInfo) {
-                if (uploadInfo.progressPercent == 100) {
-                    fileList[uploadInfo.uploadId.toInt()].uploadStatus = 4
-                    uploadAdapter.notifyDataSetChanged()
-                } else {
-                    fileList[uploadInfo.uploadId.toInt()].uploadStatus = 3
-                    uploadAdapter.notifyDataSetChanged()
-                }
-
-            }
-
-            override fun onCompletedWhileNotObserving() {
-            }
-
-        })
     }
 
     fun openFilePicker() {
@@ -156,7 +115,16 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
         filePath.addAll(path)
 
         filePath.forEach {
-            fileList.add(FileItem(name(Uri.parse(it)), it))
+            val fileItem = FileItem(name(Uri.parse(it)), it)
+            fileItem.uploadId = it
+            fileItem.refresh { _, _, _, _ ->
+                runOnUiThread {
+                    uploadAdapter.notifyDataSetChanged()
+                }
+
+            }
+            UploadService.observers.add(fileItem)
+            fileList.add(fileItem)
         }
         uploadAdapter.notifyDataSetChanged()
     }

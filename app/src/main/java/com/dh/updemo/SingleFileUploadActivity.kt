@@ -1,19 +1,18 @@
 package com.dh.updemo
 
-import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.dh.quickupload.UploadService
-import com.dh.quickupload.data.UploadInfo
-import com.dh.quickupload.network.ServerResponse
-import com.dh.quickupload.observer.request.RequestLiveData
-import com.dh.quickupload.observer.request.RequestObserverDelegate
+import com.dh.quickupload.data.UploadStatus
 import com.dh.quickupload.quick.QuickUploadRequest
+import java.io.File
 
 class SingleFileUploadActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
@@ -22,12 +21,11 @@ class SingleFileUploadActivity : AppCompatActivity() {
     private lateinit var selectFile: Button
     private lateinit var uploadProgress: TextView
     private lateinit var uploadAddress: TextView
-    private var mPath = ""
 
     companion object {
         private const val READ_REQUEST_CODE = 4
     }
-
+    private var fileItem:FileItem?=null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.single_file_upload_layout)
@@ -38,57 +36,29 @@ class SingleFileUploadActivity : AppCompatActivity() {
         uploadAddress = findViewById(R.id.uploadAddress)
         selectFile = findViewById(R.id.selectFile)
         uploadStart.setOnClickListener {
-            if (mPath == "") {
+
+            if (fileItem == null) {
                 Toast.makeText(this, "请选择文件", Toast.LENGTH_SHORT).show()
             } else {
-                QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
+
+            val  request=   QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
                     .setMethod("POST")
                     .addFileToUpload(
-                        filePath = mPath,
+                        filePath = fileItem!!.filePath,
                         parameterName = "files"
                     )
                     .setResumedFileStart(0)//如果需要断点续传调用此方法，默认情况下不需要调用
-                    .setUploadID("1")
-                    .startUpload()
+                fileItem?.quickUploadRequest=request
+                fileItem?.startUpload()
+
             }
         }
         endOfUpload.setOnClickListener {
-            UploadService.stopUpload("1")
+            fileItem?.stopUpload()
         }
         selectFile.setOnClickListener {
             openFilePicker()
         }
-        RequestLiveData(this, object : RequestObserverDelegate {
-            override fun onWait(context: Context, uploadInfo: UploadInfo) {
-
-            }
-
-            override fun onProgress(context: Context, uploadInfo: UploadInfo) {
-                progressBar.progress = uploadInfo.progressPercent
-                uploadProgress.text = "已上传：${uploadInfo.progressPercent.toString()}%"
-            }
-
-            override fun onSuccess(
-                context: Context,
-                uploadInfo: UploadInfo,
-                serverResponse: ServerResponse
-            ) {
-                uploadProgress.text = "连接成功"
-            }
-
-            override fun onError(context: Context, uploadInfo: UploadInfo, exception: Throwable) {
-                uploadProgress.text = "${exception.toString()}"
-            }
-
-            override fun onCompleted(context: Context, uploadInfo: UploadInfo) {
-                if (uploadInfo.progressPercent == 100) {
-                    uploadProgress.text = "上传完成"
-                }
-            }
-
-            override fun onCompletedWhileNotObserving() {
-            }
-        })
     }
 
     fun openFilePicker() {
@@ -113,7 +83,47 @@ class SingleFileUploadActivity : AppCompatActivity() {
     }
 
     private fun onPickedFiles(path: String) {
+        fileItem = FileItem(name(Uri.parse(path)), path)
+        fileItem?.uploadId=path
+        fileItem?.refresh { uploadStatus, uploadInfo, throwable, serverResponse ->
+            when(uploadStatus){
+                UploadStatus.DEFAULT->{
+
+                }
+                UploadStatus.Wait->{
+
+                }
+                UploadStatus.InProgress->{
+                    progressBar.progress = uploadInfo.progressPercent
+                    uploadProgress.text = "已上传：${uploadInfo.progressPercent.toString()}%"
+                }
+                UploadStatus.Success->{
+                    uploadProgress.text = "连接成功"
+                }
+                UploadStatus.Error->{
+                    uploadProgress.text = "${throwable.toString()}"
+                }
+                UploadStatus.Completed->{
+                    if (uploadInfo.progressPercent == 100) {
+                        uploadProgress.text = "上传完成"
+                    }
+                }
+                else->{}
+            }
+
+        }
+        UploadService.observers.add(fileItem!!)
         uploadAddress.text = "本地文件地址：$path"
-        mPath = path
+
+    }
+    fun name(uri: Uri): String {
+        return contentResolver.query(uri, null, null, null, null)?.use {
+            if (it.moveToFirst()) {
+                val displayNameColumn = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (displayNameColumn >= 0) it.getString(displayNameColumn) else null
+            } else {
+                null
+            }
+        } ?: uri.toString().split(File.separator).last()
     }
 }

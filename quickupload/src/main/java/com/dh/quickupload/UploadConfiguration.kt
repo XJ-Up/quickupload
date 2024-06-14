@@ -10,7 +10,6 @@ import com.dh.quickupload.observer.network.NetworkMonitor
 import com.dh.quickupload.tools.translationfile.ContentResolverSchemeHandler
 import com.dh.quickupload.tools.translationfile.FileSchemeHandler
 import com.dh.quickupload.tools.translationfile.SchemeHandler
-import com.dh.quickupload.viewmodel.UploadRepository
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.lang.reflect.InvocationTargetException
 import java.util.LinkedHashMap
@@ -61,11 +60,6 @@ object UploadConfiguration {
             throw IllegalArgumentException("您必须在应用程序子类中将命名空间设置为您的应用程序包名称 (context.packageName)")
         else
             field
-    /**
-     * 上传实时数据获取仓库
-     */
-
-    val  uploadRepository: UploadRepository=UploadRepository()
 
     /**
      * 要使用的默认通知通道。这必须在应用程序中设置
@@ -122,11 +116,10 @@ object UploadConfiguration {
             require(value >= 256) { "您不能将缓冲区大小设置为低于256字节" }
             field = value
         }
-
-
-
-
-
+//    /**
+//     * 设置列表数据类
+//     */
+//    var items: MutableList<ProgressUpdatable> = arrayListOf()
     /**
      * 配置上传网络
      */

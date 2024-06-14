@@ -7,6 +7,7 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.dh.quickupload.data.UploadStatus
 
 class UploadAdapter(
     private val fileList: List<FileItem>,
@@ -31,26 +32,30 @@ class UploadAdapter(
         private val uploadButton: Button = itemView.findViewById(R.id.upload_button)
         fun bind(fileItem: FileItem, position: Int) {
             fileName.text = fileItem.fileName
-            progressBar.progress = fileItem.uploadProgress
-            when (fileItem.uploadStatus) {
-                0 -> {
+            progressBar.progress =  fileItem.uploadInfo.progressPercent
+            when (fileItem.status) {
+                UploadStatus.DEFAULT -> {
                     uploadButton.text = "上传"
                 }
 
-                1 -> {
+                UploadStatus.Wait -> {
                     uploadButton.text = "等待"
                 }
 
-                2 -> {
+                UploadStatus.InProgress -> {
                     uploadButton.text = "取消"
                 }
 
-                3 -> {
+                UploadStatus.Error -> {
                     uploadButton.text = "重新上传"
                 }
 
-                4 -> {
+                UploadStatus.Completed -> {
                     uploadButton.text = "上传完成"
+                }
+
+                else -> {
+
                 }
             }
             uploadButton.setOnClickListener {

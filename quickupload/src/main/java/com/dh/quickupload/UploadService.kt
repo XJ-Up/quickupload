@@ -14,7 +14,7 @@ import com.dh.quickupload.extensions.getUploadTaskCreationParameters
 import com.dh.quickupload.extensions.safeRelease
 import com.dh.quickupload.tools.logger.Logger
 import com.dh.quickupload.observer.task.TaskCompletionNotifier
-import com.dh.quickupload.observer.task.UploadLiveDataObservation
+import com.dh.quickupload.observer.task.UploadTaskObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import java.util.Timer
@@ -33,6 +33,8 @@ class UploadService : Service(), CoroutineScope by MainScope() {
 
         @Volatile
         private var foregroundUploadId: String? = null
+
+
 
         /**
          * 使用给定的uploadId停止上传任务。
@@ -55,7 +57,15 @@ class UploadService : Service(), CoroutineScope by MainScope() {
             } else {
                 uploadTasksMap.keys().toList()
             }
+        /**
+         * 保存上传观察者对象集合,通过继承 UploadObserverBase 添加到observers即可
+         */
+        @JvmStatic
+        val observers:MutableList<UploadTaskObserver> = mutableListOf()
 
+        fun <T : UploadTaskObserver> List<UploadTaskObserver>.getSubclassInstances(clazz: Class<T>): List<T> {
+            return this.filterIsInstance(clazz)
+        }
         /**
          * 停止所有活动的上传。
          */
@@ -94,6 +104,7 @@ class UploadService : Service(), CoroutineScope by MainScope() {
         fun stop(context: Context, forceStop: Boolean = false) = if (forceStop) {
             stopAllUploads()
             context.stopService(Intent(context, UploadService::class.java))
+
         } else {
             uploadTasksMap.isEmpty() && context.stopService(
                 Intent(
@@ -102,18 +113,16 @@ class UploadService : Service(), CoroutineScope by MainScope() {
                 )
             )
         }
+
     }
 
     private var wakeLock: PowerManager.WakeLock? = null
     private var idleTimer: Timer? = null
 
     private val taskObservers by lazy {
-        arrayOf(
-            UploadLiveDataObservation(),
-            TaskCompletionNotifier(this)
-        )
+        observers.add(TaskCompletionNotifier(this))
+        observers.toTypedArray()
     }
-
 
     private val networkListening by lazy {
         UploadConfiguration.networkListening(this)

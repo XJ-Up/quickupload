@@ -41,10 +41,10 @@ private const val taskParametersKey = "taskParameters"
 fun Context.startNewUpload(
     params: UploadTaskParameters
 ): String {
+
     val intent = Intent(this, UploadService::class.java).apply {
         putExtra(taskParametersKey, params)
     }
-
     try {
         /*
       尝试在API 26上启动服务

@@ -6,8 +6,8 @@ import com.dh.quickupload.data.UploadTaskParameters
 import com.dh.quickupload.extensions.startNewUpload
 import com.dh.quickupload.tools.datapreservation.Persistable
 import com.dh.quickupload.tools.datapreservation.PersistableData
-import java.util.ArrayList
 import java.util.UUID
+import kotlin.collections.ArrayList
 
 /**
  * 要扩展以创建上传请求的基类。如果您正在实现基于HTTP的上传，
@@ -22,7 +22,7 @@ abstract class UploadRequest<B : UploadRequest<B>>
  * @ 如果一个或多个参数无效，则抛出IllegalArgumentException
  */
 @Throws(IllegalArgumentException::class)
-constructor(protected val context: Context, protected var serverUrl: String) : Persistable {
+constructor(protected val context: Context, private var serverUrl: String) : Persistable {
 
     private var uploadId = UUID.randomUUID().toString()
     private var started: Boolean = false
@@ -30,6 +30,7 @@ constructor(protected val context: Context, protected var serverUrl: String) : P
     private var autoDeleteSuccessfullyUploadedFiles = false
     protected val files = ArrayList<UploadFile>()
     private var resumedFileStart :Long= 0
+
     /**
      * 在子类中实现以指定将处理上传任务的类。
      * 类必须是 [UploadTask] 的子类。
@@ -51,6 +52,7 @@ constructor(protected val context: Context, protected var serverUrl: String) : P
             files = files,
             resumedFileStart=resumedFileStart,
             additionalParameters = getAdditionalParameters()
+
         )
 
     /**

@@ -4,7 +4,6 @@ import android.content.Context
 import com.dh.quickupload.UploadConfiguration.semaphore
 import com.dh.quickupload.data.UploadFile
 import com.dh.quickupload.data.UploadInfo
-
 import com.dh.quickupload.data.UploadTaskParameters
 import com.dh.quickupload.exceptions.NoNetworkException
 import com.dh.quickupload.exceptions.UploadError
@@ -29,7 +28,7 @@ abstract class UploadTask {
     private lateinit var scope: CoroutineScope
     lateinit var params: UploadTaskParameters
 
-    private val observers = ArrayList<UploadTaskObserver>(2)
+    private val observers = ArrayList<UploadTaskObserver>()
 
     /**
      * 要传输的总字节数。您应该在
@@ -208,7 +207,9 @@ abstract class UploadTask {
             TAG,
             params.id
         ) { "已上传 ${uploadedBytes * 100 / totalBytes}%, $uploadedBytes of $totalBytes 字节" }
-        theObserver { onProgress(uploadInfo) }
+        theObserver {
+            onProgress(uploadInfo)
+        }
     }
 
     /**
