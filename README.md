@@ -26,7 +26,7 @@ allprojects {
 ```groovy
 // build.gradle(Module:)
 dependencies {
-    implementation 'com.github.XJ-Up:quickupload:1.0.0'
+    implementation 'com.github.XJ-Up:quickupload:1.1.0'
 }
 ```
 
