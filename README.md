@@ -47,6 +47,7 @@ UploadConfiguration.initialize(
 #### 第二步 准备上传
 
 ```kotlin
+
 //单文件
 //第一步：构建数据类并继承 UploadObserverBase() ，其中fileName、filePath均为自定义内容
 data class FileItem(
@@ -54,13 +55,16 @@ data class FileItem(
     val filePath: String,
 ) : UploadObserverBase()
 
+
 //第二步：创建数据类对象 赋值uploadId 添加至观察者
 fileItem = FileItem(name(Uri.parse(path)), path)
 fileItem?.uploadId = path //根据你的具体情况选择合适的值作为 uploadId
 //添加至观察者
 UploadService.observers.add(fileItem)
-//第三步：创建 QuickUploadRequest 并赋值给数据类 
- --单文件
+
+
+//第三步：创建 QuickUploadRequest 并赋值给数据类
+ --单文件上传
 val request = QuickUploadRequest(this, serverUrl = "你的上传地址")
     .setMethod("POST")
     .addFileToUpload(
@@ -69,7 +73,8 @@ val request = QuickUploadRequest(this, serverUrl = "你的上传地址")
     )
     .setResumedFileStart(0)//如果需要断点续传调用此方法，默认情况下不需要调用
 fileItem.quickUploadRequest = request
- --多个单文件
+
+ --多个单文件上传
 fileList.forEachIndexed { index, s ->
     val request =
         QuickUploadRequest(this, serverUrl = "你的上传地址")
@@ -78,9 +83,10 @@ fileList.forEachIndexed { index, s ->
                 filePath = s.filePath,
                 parameterName = "files"
             )
-    s.quickUploadRequest = uploadRequest
+    s.quickUploadRequest = request
 }
- --多文件同时
+
+ --多文件同时上传
 val  request=QuickUploadRequest(this, serverUrl = "你的上传地址")
     .setMethod("POST")
     .apply {
@@ -91,7 +97,9 @@ val  request=QuickUploadRequest(this, serverUrl = "你的上传地址")
             )
         }
     }
-filesItem.quickUploadRequest=quickUploadRequest
+filesItem.quickUploadRequest=request
+
+
 //第四步：开始或停止上传
 fileItem.startUpload()
 fileItem.stopUpload()
