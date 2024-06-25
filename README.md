@@ -48,7 +48,6 @@ UploadConfiguration.initialize(
 
 ```kotlin
 
-//单文件
 //第一步：构建数据类并继承 UploadObserverBase() ，其中fileName、filePath均为自定义内容
 data class FileItem(
     val fileName: String,
@@ -133,5 +132,6 @@ fileItem.stopUpload()
 
 }
 ```
+#### 如果你没有服务器上传接口，你可以下载服务器demo[点我](https://github.com/XJ-Up/TestServer)搭建自己的测试服务器，来体验quickupload
 #### 具体使用可参考demo
 
