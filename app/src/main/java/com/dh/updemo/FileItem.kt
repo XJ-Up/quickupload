@@ -11,5 +11,5 @@ import com.dh.quickupload.observer.task.UploadObserverBase
 data class FileItem(
     val fileName: String,
     val filePath: String,
-
-) : UploadObserverBase()
+    override val uploadId: String,
+) : UploadObserverBase(uploadId)

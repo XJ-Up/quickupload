@@ -24,9 +24,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SingleFileUploadActivity"/>
-        <activity android:name=".MultipleSingleFileUploadsActivity"/>
-        <activity android:name=".UploadMultipleFilesSimultaneouslyActivity"/>
+        <activity android:name=".SingleFileUploadActivity"
+            android:exported="true"/>
+        <activity android:name=".MultipleSingleFileUploadsActivity"
+            android:exported="true"/>
+        <activity android:name=".UploadMultipleFilesSimultaneouslyActivity"
+            android:exported="true"/>
     </application>
 
 </manifest>

@@ -87,13 +87,19 @@ object UploadConfiguration {
     /**
      *  Semaphore 以限制最大并发任务数
      */
+    @JvmStatic
     var maxConcurrentTasks = 2 // 设置最大并发任务数
+        set(value) {
+            require(value < 1) { "任务数必须大于1" }
+            field = value
+        }
     val semaphore = Semaphore(maxConcurrentTasks)
 
     /**
      *  创建网络状态监听
      *  当网络断开时立即停止全部上传
      */
+    @JvmStatic
     var networkListening: (UploadService) -> NetworkMonitor = {
         NetworkMonitor(it)
     }
@@ -116,10 +122,6 @@ object UploadConfiguration {
             require(value >= 256) { "您不能将缓冲区大小设置为低于256字节" }
             field = value
         }
-//    /**
-//     * 设置列表数据类
-//     */
-//    var items: MutableList<ProgressUpdatable> = arrayListOf()
     /**
      * 配置上传网络
      */

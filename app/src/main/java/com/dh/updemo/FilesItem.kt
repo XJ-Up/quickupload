@@ -1,6 +1,7 @@
 package com.dh.updemo
 
 import com.dh.quickupload.observer.task.UploadObserverBase
+
 /**
  * 多个地址文件上传示例
  * 使用：
@@ -9,5 +10,6 @@ import com.dh.quickupload.observer.task.UploadObserverBase
  */
 data class FilesItem(
     val fileName: String,
-    val filePath: MutableList<String>
-): UploadObserverBase()
+    val filePath: MutableList<String>,
+    override val uploadId: String,
+) : UploadObserverBase(uploadId)

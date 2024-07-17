@@ -30,7 +30,7 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
 
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
-
+        recyclerView.itemAnimator=null
 
         uploadAdapter = UploadAdapter(fileList) {
             val uploadStatus = fileList[it].status
@@ -53,6 +53,9 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
         recyclerView.adapter = uploadAdapter
         findViewById<Button>(R.id.uploadStart).setOnClickListener {
             fileList.forEachIndexed { index, s ->
+                if (UploadService.taskList.contains(s.uploadId)){
+                    return@forEachIndexed
+                }
                 val uploadRequest =
                     QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
                         .setMethod("POST")
@@ -115,13 +118,10 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
         filePath.addAll(path)
 
         filePath.forEach {
-            val fileItem = FileItem(name(Uri.parse(it)), it)
-            fileItem.uploadId = it
+            val fileItem = FileItem(name(Uri.parse(it)), it, it)
             fileItem.refresh { _, _, _, _ ->
-                runOnUiThread {
-                    uploadAdapter.notifyDataSetChanged()
-                }
-
+                val indexOf = fileList.indexOf(fileItem)
+                uploadAdapter.notifyItemChanged(indexOf)
             }
             UploadService.observers.add(fileItem)
             fileList.add(fileItem)

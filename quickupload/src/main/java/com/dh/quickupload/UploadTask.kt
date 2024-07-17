@@ -87,11 +87,6 @@ abstract class UploadTask {
         }
     }
 
-    fun joinTheJob(job: Job) {
-        this.job = job
-    }
-
-
     suspend fun <T> withSemaphore(action: suspend () -> T): T {
         semaphore.acquire() // 获取许可，减少可用许可数
         return try {

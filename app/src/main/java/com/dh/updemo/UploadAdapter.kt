@@ -23,9 +23,7 @@ class UploadAdapter(
     override fun onBindViewHolder(holder: UploadViewHolder, position: Int) {
         holder.bind(fileList[position], position)
     }
-
     override fun getItemCount(): Int = fileList.size
-
     inner class UploadViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val fileName: TextView = itemView.findViewById(R.id.file_name)
         private val progressBar: ProgressBar = itemView.findViewById(R.id.progress_bar)
@@ -51,11 +49,13 @@ class UploadAdapter(
                 }
 
                 UploadStatus.Completed -> {
-                    uploadButton.text = "上传完成"
+                    if (fileItem.uploadInfo.progressPercent==100){
+                        uploadButton.text = "上传完成"
+
+                    }
                 }
 
                 else -> {
-
                 }
             }
             uploadButton.setOnClickListener {

@@ -1,5 +1,6 @@
 package com.dh.updemo
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -30,7 +31,8 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
     companion object {
         private const val READ_REQUEST_CODE = 5
     }
-    private var filesItem:FilesItem?=null
+
+    private var filesItem: FilesItem? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.upload_multiple_files_simultaneously_layout)
@@ -41,23 +43,23 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
         uploadAddress = findViewById(R.id.uploadAddress)
         selectFile = findViewById(R.id.selectFile)
         uploadStart.setOnClickListener {
-            if (filesItem==null){
+            if (filesItem == null) {
                 Toast.makeText(this, "请选择文件", Toast.LENGTH_SHORT).show()
-            }else{
+            } else {
                 filesItem?.let {
-                    val  quickUploadRequest=   QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
+                    it.quickUploadRequest= QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
                         .setMethod("POST")
                         .apply {
-                            it.filePath .forEachIndexed { index, s ->
+                            it.filePath.forEachIndexed { _, s ->
                                 addFileToUpload(
                                     filePath = s,
                                     parameterName = "files"
                                 )
                             }
                         }
-                    it.quickUploadRequest=quickUploadRequest
                     it.startUpload()
                 }
+
             }
         }
         endOfUpload.setOnClickListener {
@@ -79,6 +81,7 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
         startActivityForResult(intent, READ_REQUEST_CODE)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
         if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
@@ -86,7 +89,7 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
                 val clipData = intent.clipData
                 if (clipData != null) {
                     // 多个文件被选中
-                    var file = arrayListOf<String>()
+                    val file = arrayListOf<String>()
 
                     for (i in 0 until clipData.itemCount) {
                         val uri = clipData.getItemAt(i).uri
@@ -105,33 +108,39 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun onPickedFiles(path: MutableList<String>) {
-        filesItem = FilesItem("多文件",path)
-        filesItem?.uploadId="多文件"
+        filesItem = FilesItem("多文件", path, "多文件")
         filesItem?.refresh { uploadStatus, uploadInfo, throwable, serverResponse ->
-            when(uploadStatus){
-                UploadStatus.DEFAULT->{
+            when (uploadStatus) {
+                UploadStatus.DEFAULT -> {
 
                 }
-                UploadStatus.Wait->{
+
+                UploadStatus.Wait -> {
 
                 }
-                UploadStatus.InProgress->{
+
+                UploadStatus.InProgress -> {
                     progressBar.progress = uploadInfo.progressPercent
                     uploadProgress.text = "已上传：${uploadInfo.progressPercent.toString()}%"
                 }
-                UploadStatus.Success->{
+
+                UploadStatus.Success -> {
                     uploadProgress.text = "连接成功"
                 }
-                UploadStatus.Error->{
-                    uploadProgress.text = "${throwable.toString()}"
+
+                UploadStatus.Error -> {
+                    uploadProgress.text = throwable.toString()
                 }
-                UploadStatus.Completed->{
+
+                UploadStatus.Completed -> {
                     if (uploadInfo.progressPercent == 100) {
                         uploadProgress.text = "上传完成"
                     }
                 }
-                else->{}
+
+                else -> {}
             }
         }
         UploadService.observers.add(filesItem!!)

@@ -74,7 +74,7 @@ data class UploadTaskCreationParameters(
 )
 
 fun Intent?.getUploadTaskCreationParameters(): UploadTaskCreationParameters? {
-    if (this == null ) {
+    if (this == null) {
         Logger.error(
             component = UploadService.TAG,
             uploadId = Logger.NA,
@@ -127,9 +127,9 @@ fun Intent?.getUploadTaskCreationParameters(): UploadTaskCreationParameters? {
 }
 
 /**
-* 根据intent中请求的task类创建一个新的task实例。
-* @ return task实例，如果task类不支持或无效，则返回null
-*/
+ * 根据intent中请求的task类创建一个新的task实例。
+ * @ return task实例，如果task类不支持或无效，则返回null
+ */
 @Suppress("UNCHECKED_CAST")
 fun Context.getUploadTask(
     creationParameters: UploadTaskCreationParameters,

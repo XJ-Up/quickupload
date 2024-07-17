@@ -1,5 +1,6 @@
 package com.dh.updemo
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -14,6 +15,9 @@ import com.dh.quickupload.data.UploadStatus
 import com.dh.quickupload.quick.QuickUploadRequest
 import java.io.File
 
+/**
+ * 单文件上传
+ */
 class SingleFileUploadActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var uploadStart: Button
@@ -25,7 +29,8 @@ class SingleFileUploadActivity : AppCompatActivity() {
     companion object {
         private const val READ_REQUEST_CODE = 4
     }
-    private var fileItem:FileItem?=null
+
+    private var fileItem: FileItem? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.single_file_upload_layout)
@@ -36,22 +41,21 @@ class SingleFileUploadActivity : AppCompatActivity() {
         uploadAddress = findViewById(R.id.uploadAddress)
         selectFile = findViewById(R.id.selectFile)
         uploadStart.setOnClickListener {
-
             if (fileItem == null) {
                 Toast.makeText(this, "请选择文件", Toast.LENGTH_SHORT).show()
             } else {
-
-            val  request=   QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
-                    .setMethod("POST")
-                    .addFileToUpload(
-                        filePath = fileItem!!.filePath,
-                        parameterName = "files"
-                    )
-                    .setResumedFileStart(0)//如果需要断点续传调用此方法，默认情况下不需要调用
-                fileItem?.quickUploadRequest=request
-                fileItem?.startUpload()
-
+                fileItem?.let {
+                    it.quickUploadRequest= QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
+                        .setMethod("POST")
+                        .addFileToUpload(
+                            filePath = it.filePath,
+                            parameterName = "files"
+                        )
+                        .setResumedFileStart(0)
+                    it.startUpload()
+                }
             }
+
         }
         endOfUpload.setOnClickListener {
             fileItem?.stopUpload()
@@ -82,40 +86,46 @@ class SingleFileUploadActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun onPickedFiles(path: String) {
-        fileItem = FileItem(name(Uri.parse(path)), path)
-        fileItem?.uploadId=path
+        fileItem = FileItem(name(Uri.parse(path)), path, path)
         fileItem?.refresh { uploadStatus, uploadInfo, throwable, serverResponse ->
-            when(uploadStatus){
-                UploadStatus.DEFAULT->{
+            when (uploadStatus) {
+                UploadStatus.DEFAULT -> {
 
                 }
-                UploadStatus.Wait->{
+
+                UploadStatus.Wait -> {
 
                 }
-                UploadStatus.InProgress->{
+
+                UploadStatus.InProgress -> {
                     progressBar.progress = uploadInfo.progressPercent
-                    uploadProgress.text = "已上传：${uploadInfo.progressPercent.toString()}%"
+                    uploadProgress.text = "已上传：${uploadInfo.progressPercent}%"
                 }
-                UploadStatus.Success->{
+
+                UploadStatus.Success -> {
                     uploadProgress.text = "连接成功"
                 }
-                UploadStatus.Error->{
-                    uploadProgress.text = "${throwable.toString()}"
+
+                UploadStatus.Error -> {
+                    uploadProgress.text = throwable.toString()
                 }
-                UploadStatus.Completed->{
+
+                UploadStatus.Completed -> {
                     if (uploadInfo.progressPercent == 100) {
                         uploadProgress.text = "上传完成"
                     }
                 }
-                else->{}
-            }
 
+                else -> {}
+            }
         }
         UploadService.observers.add(fileItem!!)
         uploadAddress.text = "本地文件地址：$path"
 
     }
+
     fun name(uri: Uri): String {
         return contentResolver.query(uri, null, null, null, null)?.use {
             if (it.moveToFirst()) {

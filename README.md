@@ -1,6 +1,6 @@
 [![pk3f4HO.png](https://s21.ax1x.com/2024/05/30/pk3f4HO.png)](https://imgse.com/i/pk3f4HO)
 
-### 一个让开发者快速完成上传功能的框架
+### 一个让开发者快速完成上传功能的框架 支持java、kotlin
 
 # 截图
 
@@ -26,10 +26,10 @@ allprojects {
 ```groovy
 // build.gradle(Module:)
 dependencies {
-    implementation 'com.github.XJ-Up:quickupload:1.2.0'
+    implementation 'com.github.XJ-Up:quickupload:1.2.1'
 }
 ```
-
+## 具体使用可参考demo[点我](https://github.com/XJ-Up/quickupload/tree/main/app/src/main/java/com/dh/updemo)  
 # 如何使用
 
 #### 第一步 Application进行初始化配置
@@ -48,16 +48,16 @@ UploadConfiguration.initialize(
 
 ```kotlin
 
-//第一步：构建数据类并继承 UploadObserverBase() ，其中fileName、filePath均为自定义内容
+//第一步：构建数据类并继承 UploadObserverBase()且必须传入uploadId（你觉得任何唯一性的字符串） ，其中fileName、filePath均为自定义内容
 data class FileItem(
     val fileName: String,
     val filePath: String,
-) : UploadObserverBase()
+    override val uploadId: String,
+) : UploadObserverBase(uploadId)
 
 
 //第二步：创建数据类对象 赋值uploadId 添加至观察者
-fileItem = FileItem(name(Uri.parse(path)), path)
-fileItem?.uploadId = path //根据你的具体情况选择合适的值作为 uploadId
+fileItem = FileItem(name(Uri.parse(path)), path, uploadId)
 //添加至观察者
 UploadService.observers.add(fileItem)
 
@@ -107,6 +107,8 @@ fileItem.stopUpload()
 #### 第三步 获取上传详情
 
 ```kotlin
+//注意： fileItem中已包含对应的数据（uploadStatus, uploadInfo, throwable, serverResponse）
+// 这里的触发只是进行ui更新，详细使用可查看demo
   fileItem.refresh { uploadStatus, uploadInfo, throwable, serverResponse ->
     when (uploadStatus) {
         UploadStatus.DEFAULT -> {
@@ -133,5 +135,5 @@ fileItem.stopUpload()
 }
 ```
 #### 如果你没有服务器上传接口，你可以下载服务器demo[点我](https://github.com/XJ-Up/TestServer)搭建自己的测试服务器，来体验quickupload
-#### 具体使用可参考demo
+
 

@@ -63,9 +63,7 @@ class UploadService : Service(), CoroutineScope by MainScope() {
         @JvmStatic
         val observers:MutableList<UploadTaskObserver> = mutableListOf()
 
-        fun <T : UploadTaskObserver> List<UploadTaskObserver>.getSubclassInstances(clazz: Class<T>): List<T> {
-            return this.filterIsInstance(clazz)
-        }
+
         /**
          * 停止所有活动的上传。
          */
@@ -115,15 +113,15 @@ class UploadService : Service(), CoroutineScope by MainScope() {
         }
 
     }
-
     private var wakeLock: PowerManager.WakeLock? = null
     private var idleTimer: Timer? = null
-
-    private val taskObservers by lazy {
-        observers.add(TaskCompletionNotifier(this))
-        observers.toTypedArray()
-    }
-
+    private val taskObservers: Array<UploadTaskObserver>
+        get() {
+            if (!observers.contains(TaskCompletionNotifier(this))) {
+                observers.add(TaskCompletionNotifier(this))
+            }
+            return observers.toTypedArray()
+        }
     private val networkListening by lazy {
         UploadConfiguration.networkListening(this)
     }

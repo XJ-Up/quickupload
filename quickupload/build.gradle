@@ -7,10 +7,11 @@ plugins {
 
 android {
     namespace 'com.dh.quickupload'
-    compileSdk 34
+    compileSdk compilesdk_version
 
     defaultConfig {
-        minSdk 21
+        minSdk minsdk_version
+        targetSdk targetsdk_version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
 
@@ -40,7 +41,7 @@ afterEvaluate{
                 from components.release
                 groupId = 'com.dh'
                 artifactId = 'quickupload'
-                version = '1.5.0'
+                version = '1.2.1'
             }
         }
     }
@@ -50,7 +51,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 // 协程
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2"
-    api 'com.squareup.okhttp3:okhttp:4.9.0'
+    api 'com.squareup.okhttp3:okhttp:4.10.0'
 }
