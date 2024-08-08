@@ -11,7 +11,7 @@ import com.dh.quickupload.data.UploadStatus
 
 class UploadAdapter(
     private val fileList: List<FileItem>,
-    private val onUploadButtonClick: (Int) -> Unit
+    private val onUploadButtonClick: (FileItem) -> Unit
 ) :
     RecyclerView.Adapter<UploadAdapter.UploadViewHolder>() {
 
@@ -59,7 +59,7 @@ class UploadAdapter(
                 }
             }
             uploadButton.setOnClickListener {
-                onUploadButtonClick(position)
+                onUploadButtonClick(fileItem)
             }
         }
     }

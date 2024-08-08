@@ -86,7 +86,6 @@ abstract class UploadTask {
             }
         }
     }
-
     suspend fun <T> withSemaphore(action: suspend () -> T): T {
         semaphore.acquire() // 获取许可，减少可用许可数
         return try {
@@ -128,9 +127,11 @@ abstract class UploadTask {
     fun start() {
         job = scope.launch(UploadConfiguration.dispatcher) {
             theObserver {
-                onWait(
-                    uploadInfo
-                )
+                launch(Dispatchers.Main) {
+                    onWait(
+                        uploadInfo
+                    )
+                }
             }
             withSemaphore {
                 try {
@@ -203,7 +204,9 @@ abstract class UploadTask {
             params.id
         ) { "已上传 ${uploadedBytes * 100 / totalBytes}%, $uploadedBytes of $totalBytes 字节" }
         theObserver {
-            onProgress(uploadInfo)
+           scope. launch(Dispatchers.Main) {
+                onProgress(uploadInfo)
+            }
         }
     }
 
@@ -238,21 +241,30 @@ abstract class UploadTask {
             }
 
             theObserver {
-                onSuccess(
-                    uploadInfo,
-                    response
-                )
+                scope.launch(Dispatchers.Main) {
+                    onSuccess(
+                        uploadInfo,
+                        response
+                    )
+                }
+
             }
         } else {
             theObserver {
-                onError(
-                    uploadInfo,
-                    UploadError(response)
-                )
+                scope.launch(Dispatchers.Main) {
+                    onError(
+                        uploadInfo,
+                        UploadError(response)
+                    )
+                }
+
             }
         }
 
-        theObserver { onCompleted(uploadInfo) }
+        theObserver {
+            scope.launch(Dispatchers.Main) {
+                onCompleted(uploadInfo)
+            }}
     }
 
     /**
@@ -283,8 +295,16 @@ abstract class UploadTask {
     private fun onError(exception: Throwable) {
         Logger.error(TAG, params.id, exception) { "错误" }
         uploadInfo.let {
-            theObserver { onError(it, exception) }
-            theObserver { onCompleted(it) }
+            theObserver {
+                scope.launch(Dispatchers.Main) {
+                    onError(it, exception) }
+                }
+
+            theObserver {
+                scope.launch(Dispatchers.Main) {
+                    onCompleted(it)
+                }
+            }
         }
     }
 

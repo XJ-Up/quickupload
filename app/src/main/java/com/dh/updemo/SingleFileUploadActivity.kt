@@ -121,7 +121,7 @@ class SingleFileUploadActivity : AppCompatActivity() {
                 else -> {}
             }
         }
-        UploadService.observers.add(fileItem!!)
+        UploadService.addObserver(fileItem!!)
         uploadAddress.text = "本地文件地址：$path"
 
     }

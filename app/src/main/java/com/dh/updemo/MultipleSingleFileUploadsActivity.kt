@@ -13,6 +13,7 @@ import com.dh.quickupload.UploadService
 import com.dh.quickupload.data.UploadStatus
 import com.dh.quickupload.quick.QuickUploadRequest
 import java.io.File
+import java.lang.ref.WeakReference
 
 class MultipleSingleFileUploadsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -33,12 +34,12 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
         recyclerView.itemAnimator=null
 
         uploadAdapter = UploadAdapter(fileList) {
-            val uploadStatus = fileList[it].status
+            val uploadStatus = it.status
 
             if (uploadStatus == UploadStatus.InProgress) {
-                fileList[it].stopUpload()
+              it.stopUpload()
             } else if (uploadStatus == UploadStatus.DEFAULT || uploadStatus == UploadStatus.Error) {
-                val filePath = fileList[it].filePath
+                val filePath =it.filePath
                 val uploadRequest =
                     QuickUploadRequest(this, serverUrl = "http://192.168.30.137:8080/upload")
                         .setMethod("POST")
@@ -46,8 +47,8 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
                             filePath = filePath,
                             parameterName = "files"
                         )
-                fileList[it].quickUploadRequest = uploadRequest
-                fileList[it].startUpload()
+                it.quickUploadRequest = uploadRequest
+                it.startUpload()
             }
         }
         recyclerView.adapter = uploadAdapter
@@ -63,7 +64,7 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
                             filePath = s.filePath,
                             parameterName = "files"
                         )
-                s.quickUploadRequest = uploadRequest
+                s.quickUploadRequest =uploadRequest
                 s.startUpload()
             }
 
@@ -73,7 +74,6 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.selectFile).setOnClickListener {
             openFilePicker()
-
         }
     }
 
@@ -116,14 +116,14 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
     private fun onPickedFiles(path: MutableList<String>) {
         filePath.clear()
         filePath.addAll(path)
-
+        fileList.clear()
         filePath.forEach {
             val fileItem = FileItem(name(Uri.parse(it)), it, it)
             fileItem.refresh { _, _, _, _ ->
                 val indexOf = fileList.indexOf(fileItem)
                 uploadAdapter.notifyItemChanged(indexOf)
             }
-            UploadService.observers.add(fileItem)
+                UploadService.addObserver(fileItem)
             fileList.add(fileItem)
         }
         uploadAdapter.notifyDataSetChanged()
@@ -138,5 +138,10 @@ class MultipleSingleFileUploadsActivity : AppCompatActivity() {
                 null
             }
         } ?: uri.toString().split(File.separator).last()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        UploadService.removeAllObserver()
     }
 }

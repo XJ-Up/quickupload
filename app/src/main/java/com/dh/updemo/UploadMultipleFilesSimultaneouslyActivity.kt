@@ -143,7 +143,7 @@ class UploadMultipleFilesSimultaneouslyActivity : AppCompatActivity() {
                 else -> {}
             }
         }
-        UploadService.observers.add(filesItem!!)
+        UploadService.addObserver(filesItem!!)
         uploadAddress.text = "本地文件地址：${path.joinToString()}"
     }
 }

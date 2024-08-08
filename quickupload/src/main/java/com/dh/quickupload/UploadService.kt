@@ -14,6 +14,7 @@ import com.dh.quickupload.extensions.getUploadTaskCreationParameters
 import com.dh.quickupload.extensions.safeRelease
 import com.dh.quickupload.tools.logger.Logger
 import com.dh.quickupload.observer.task.TaskCompletionNotifier
+import com.dh.quickupload.observer.task.UploadObserverBase
 import com.dh.quickupload.observer.task.UploadTaskObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -61,8 +62,23 @@ class UploadService : Service(), CoroutineScope by MainScope() {
          * 保存上传观察者对象集合,通过继承 UploadObserverBase 添加到observers即可
          */
         @JvmStatic
-        val observers:MutableList<UploadTaskObserver> = mutableListOf()
+        private  val observers:MutableList<UploadObserverBase> = mutableListOf()
+        @JvmStatic
+        fun removeAllObserver() {
+            observers.clear()
+        }
+        @JvmStatic
+        fun addObserver(observer: UploadObserverBase) {
+            val existingObserverIndex = observers.indexOfFirst { it.uploadId == observer.uploadId }
 
+            if (existingObserverIndex != -1) {
+                // 如果找到具有相同id的对象，进行更新
+                observers[existingObserverIndex] = observer
+            } else {
+                // 如果没有找到相同id的对象，添加新对象
+                observers.add(observer)
+            }
+        }
 
         /**
          * 停止所有活动的上传。
@@ -115,15 +131,13 @@ class UploadService : Service(), CoroutineScope by MainScope() {
     }
     private var wakeLock: PowerManager.WakeLock? = null
     private var idleTimer: Timer? = null
-    private val taskObservers: Array<UploadTaskObserver>
-        get() {
-            if (!observers.contains(TaskCompletionNotifier(this))) {
-                observers.add(TaskCompletionNotifier(this))
-            }
-            return observers.toTypedArray()
-        }
+    private val taskObservers by lazy {
+        arrayOf(
+            TaskCompletionNotifier(this)
+        )
+    }
     private val networkListening by lazy {
-        UploadConfiguration.networkListening(this)
+        UploadConfiguration.networkListening(application)
     }
 
     @Synchronized
@@ -216,7 +230,14 @@ class UploadService : Service(), CoroutineScope by MainScope() {
             shutdownIfThereArentAnyActiveTasks()
         }
     }
-
+    private fun getObserverById(id: String): Array<UploadTaskObserver> {
+        val observer = observers.find { it.uploadId == id }
+        return if (observer != null) {
+            arrayOf(observer)
+        } else {
+            emptyArray()
+        }
+    }
     override fun onCreate() {
         super.onCreate()
 
@@ -257,12 +278,10 @@ class UploadService : Service(), CoroutineScope by MainScope() {
             return shutdownIfThereArentAnyActiveTasks()
         }
 
-
-
         val currentTask = getUploadTask(
             creationParameters = taskCreationParameters,
             scope = this,
-            observers = taskObservers
+            observers = getObserverById(taskCreationParameters.params.id)+taskObservers
         ) ?: return shutdownIfThereArentAnyActiveTasks()
 
         clearIdleTimer()
@@ -287,7 +306,7 @@ class UploadService : Service(), CoroutineScope by MainScope() {
         wakeLock.safeRelease()
 
         uploadTasksMap.clear()
-
+        observers.clear()
         Logger.debug(TAG, Logger.NA) { "UploadService已销毁" }
     }
 }

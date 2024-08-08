@@ -2,6 +2,7 @@ package com.dh.quickupload.observer.task
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.dh.quickupload.UploadService
 import com.dh.quickupload.data.UploadInfo
 import com.dh.quickupload.data.UploadStatus
@@ -34,54 +35,41 @@ open class UploadObserverBase (open val uploadId: String) : UploadTaskObserver {
     }
     open fun notifyChange() {
         // 子类可以覆盖通知逻辑
-        Handler(Looper.getMainLooper()).post {
+//        Handler(Looper.getMainLooper()).post {
             callback?.invoke(status,uploadInfo,exception,serverResponse)
-        }
+//        }
     }
 
     override fun onWait(info: UploadInfo) {
-        if (info.uploadId==uploadId){
             uploadInfo = info
             status = UploadStatus.Wait
             notifyChange()
-        }
     }
 
     override fun onProgress(info: UploadInfo) {
-        if (info.uploadId==uploadId){
             uploadInfo = info
             status = UploadStatus.InProgress
             notifyChange()
-        }
-
     }
 
     override fun onSuccess(info: UploadInfo, response: ServerResponse) {
-        if (info.uploadId==uploadId){
             uploadInfo = info
             status = UploadStatus.Success
             serverResponse = response
             notifyChange()
-        }
-
     }
 
     override fun onError(info: UploadInfo, exception: Throwable) {
-        if (info.uploadId==uploadId){
             uploadInfo = info
             status = UploadStatus.Error
             this.exception = exception
             notifyChange()
-        }
-
     }
     override fun onCompleted(info: UploadInfo) {
-        if (info.uploadId==uploadId){
             uploadInfo = info
             if (uploadInfo.progressPercent==100){
                 status = UploadStatus.Completed
             }
             notifyChange()
-        }
     }
 }

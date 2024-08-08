@@ -100,7 +100,7 @@ object UploadConfiguration {
      *  当网络断开时立即停止全部上传
      */
     @JvmStatic
-    var networkListening: (UploadService) -> NetworkMonitor = {
+    var networkListening: (Application) -> NetworkMonitor = {
         NetworkMonitor(it)
     }
     /**

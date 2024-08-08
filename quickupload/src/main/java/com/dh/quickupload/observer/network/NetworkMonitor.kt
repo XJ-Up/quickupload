@@ -6,8 +6,9 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import com.dh.quickupload.UploadService
+import java.lang.ref.WeakReference
 
-class NetworkMonitor( context: Context) {
+class NetworkMonitor(context: Context) {
 
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val networkCallback: ConnectivityManager.NetworkCallback
